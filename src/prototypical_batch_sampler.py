@@ -70,3 +70,65 @@ class PrototypicalBatchSampler(object):
         returns the number of iterations (episodes) per epoch
         '''
         return self.iterations
+
+
+class PartitianPrototypicalBatchSampler(PrototypicalBatchSampler):
+    """
+    Modify [PrototypicalBatchSampler] to enable partitioning. 
+    """
+
+    def __init__(self, labels, classes_per_it, num_samples, iterations, num_partitions, idx):
+        PrototypicalBatchSampler.__init__(self, labels, classes_per_it, num_samples, iterations)
+        self.num_partitions = num_partitions
+        self.idx = idx
+
+    def __iter__(self):
+        '''
+        yield a batch of indexes
+        '''
+        spc = self.sample_per_class
+        cpi = self.classes_per_it
+
+        for it in range(self.iterations):
+            batch_size = spc * cpi
+            batch = torch.LongTensor(batch_size)
+            c_idxs = torch.randperm(len(self.classes))[:cpi]
+            for i, c in enumerate(self.classes[c_idxs]):
+                s = slice(i * spc, (i + 1) * spc)
+                # FIXME when torch.argwhere will exists
+                x = int(np.ceil(len(self.classes[c_idxs])/self.num_partitions))
+                label_idx = torch.arange(len(self.classes)).long()[self.classes == c].item()
+                partitioned_indices = list(range(self.numel_per_class[label_idx]))[(self.idx-1)*x:self.idx*x]
+                sample_idxs = partitioned_indices[torch.randperm(len(partitioned_indices))][:spc]
+                batch[s] = self.indexes[label_idx][sample_idxs]
+            batch = batch[torch.randperm(len(batch))]
+            yield batch
+
+    def __len__(self):
+        '''
+        returns the number of iterations (episodes) per epoch
+        '''
+        return self.iterations
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
