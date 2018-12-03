@@ -52,6 +52,23 @@ def init_dataloader(opt, mode):
     return dataloader
 
 
+def init_list_dataloader(opt, mode):
+    """
+    TODO: implement init_list_dataloader
+
+    Args:
+        opt: parameters
+        mode: should always be 'train'
+
+    Return:
+        list of torch.utils.data.DataLoader for each random subset of data
+    """
+    out = []
+    for _ in range(n):
+        out.append(init_dataloader(opt, mode))
+    return out
+
+
 def init_protonet(opt):
     '''
     Initialize the ProtoNet
