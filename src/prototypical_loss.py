@@ -15,7 +15,6 @@ class PrototypicalLoss(Module):
     def forward(self, input, target):
         return prototypical_loss(input, target, self.n_support)
 
-
 def euclidean_dist(x, y):
     '''
     Compute euclidean distance between two tensors
@@ -60,6 +59,7 @@ def prototypical_loss(input, target, n_support):
     # FIXME when torch.unique will be available on cuda too
     classes = torch.unique(target_cpu)
     n_classes = len(classes)
+
     # FIXME when torch will support where as np
     # assuming n_query, n_target constants
     n_query = target_cpu.eq(classes[0].item()).sum().item() - n_support
@@ -84,3 +84,42 @@ def prototypical_loss(input, target, n_support):
     acc_val = y_hat.eq(target_inds.squeeze()).float().mean()
 
     return loss_val,  acc_val
+
+
+def get_log_prob(input, target, n_support):
+    target_cpu = target.to('cpu')
+    input_cpu = input.to('cpu')
+
+    def supp_idxs(c):
+        # FIXME when torch will support where as np
+        return target_cpu.eq(c).nonzero()[:n_support].squeeze(1)
+
+    # FIXME when torch.unique will be available on cuda too
+    classes = torch.unique(target_cpu)
+    n_classes = len(classes)
+    # print(n_classes)
+
+    # FIXME when torch will support where as np
+    # assuming n_query, n_target constants
+    n_query = target_cpu.eq(classes[0].item()).sum().item() - n_support
+
+    support_idxs = list(map(supp_idxs, classes))
+
+    prototypes = torch.stack([input_cpu[idx_list].mean(0) for idx_list in support_idxs])
+    # FIXME when torch will support where as np
+    query_idxs = torch.stack(list(map(lambda c: target_cpu.eq(c).nonzero()[n_support:], classes))).view(-1)
+
+    query_samples = input.to('cpu')[query_idxs]
+    dists = euclidean_dist(query_samples, prototypes)
+
+    log_p_y = F.log_softmax(-dists, dim=1).view(n_classes, n_query, -1)
+
+    target_inds = torch.arange(0, n_classes)
+    target_inds = target_inds.view(n_classes, 1, 1)
+    target_inds = target_inds.expand(n_classes, n_query, 1).long()
+    print(target_cpu)
+    print(target_cpu.shape)
+    print(target_inds)
+
+    loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1)
+    return loss_val
