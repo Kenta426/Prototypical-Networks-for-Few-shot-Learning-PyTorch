@@ -1,6 +1,7 @@
 # coding=utf-8
 from prototypical_batch_sampler import PrototypicalBatchSampler
-from prototypical_loss import prototypical_loss as loss_fn, get_log_prob
+from prototypical_loss import prototypical_loss as loss_fn
+from prototypical_loss import get_prob
 from omniglot_dataset import OmniglotDataset
 from protonet import ProtoNet
 from parser import get_parser
@@ -143,12 +144,12 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
             if teachers is None:
                 teacher_targets=None
             else:
-                log_prob = []
+                probs = []
                 for teacher in teachers:
-                    model_output = model(x)
-                    log_prob.append(get_log_prob(model_output).unsqueeze(3)) # batch x query x class x 1
-                log_prob = torch.cat(log_prob,dim=3) # batch x query x class x teacher
-                teacher_targets = torch.mean(log_prob, dim=3) # batch x query x class
+                    model_output = teacher(x)
+                    probs.append(get_prob(model_output).unsqueeze(0)) # 1 x class x query x batch
+                probs = torch.cat(probs, dim=0) # teacher x class x query x batch
+                teacher_targets = torch.mean(probs, dim=0) # class x query x batch
 
             loss, acc = loss_fn(model_output, target=y,
                                 n_support=opt.num_support_tr,

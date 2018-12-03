@@ -86,7 +86,7 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     return loss_val,  acc_val
 
 
-def get_log_prob(input, target, n_support):
+def get_prob(input, target, n_support):
     target_cpu = target.to('cpu')
     input_cpu = input.to('cpu')
 
@@ -97,7 +97,6 @@ def get_log_prob(input, target, n_support):
     # FIXME when torch.unique will be available on cuda too
     classes = torch.unique(target_cpu)
     n_classes = len(classes)
-    # print(n_classes)
 
     # FIXME when torch will support where as np
     # assuming n_query, n_target constants
@@ -112,11 +111,5 @@ def get_log_prob(input, target, n_support):
     query_samples = input.to('cpu')[query_idxs]
     dists = euclidean_dist(query_samples, prototypes)
 
-    log_p_y = F.log_softmax(-dists, dim=1).view(n_classes, n_query, -1)
-
-    target_inds = torch.arange(0, n_classes)
-    target_inds = target_inds.view(n_classes, 1, 1)
-    target_inds = target_inds.expand(n_classes, n_query, 1).long()
-
-    loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1)
-    return loss_val
+    p_y = F.softmax(-dists, dim=1).view(n_classes, n_query, -1)
+    return p_y
