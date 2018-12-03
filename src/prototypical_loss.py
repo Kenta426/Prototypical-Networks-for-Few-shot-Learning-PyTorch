@@ -52,6 +52,8 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     '''
     target_cpu = target.to('cpu')
     input_cpu = input.to('cpu')
+    if teacher_targets != None:
+        teacher_targets_cpu = teacher_targets.to('cpu')
 
     def supp_idxs(c):
         # FIXME when torch will support where as np
@@ -81,7 +83,7 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     target_inds = target_inds.view(n_classes, 1, 1)
     target_inds = target_inds.expand(n_classes, n_query, 1).long()
     target_inds1 = target_inds.contiguous().view(n_classes*n_query)
-    teacher_targets.view(n_classes*n_query,n_classes)
+    #teacher_targets_cpu.view(n_classes*n_query,n_classes)
     #print(target_inds1)
     #loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1).mean()
     criterion = nn.CrossEntropyLoss()
@@ -89,8 +91,12 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     if teacher_targets == None:
         loss_val = criterion(-dists, target_inds1)
     else:
-        loss_val = criterion(-dists, target_inds1) + cross_entropy_soft(-dists, teacher_targets.view(n_classes*n_query,n_classes))
+        #loss_val = criterion(-dists, target_inds1) + cross_entropy_soft(-dists, teacher_targets_cpu.view(n_classes*n_query,n_classes))
+        alpha = .9
+        loss_val = alpha*KL_loss(log_p_y, target_inds1) + (1-alpha)*KL_loss(log_p_y, teacher_targets_cpu.view(n_classes*n_query,n_classes))
 
+    [1,3,2,6,10]
+    [[.1,.2,.1],[.3,4,.3]]
     _, y_hat = log_p_y.max(2)
     acc_val = y_hat.eq(target_inds.squeeze()).float().mean()
 
@@ -149,9 +155,14 @@ def cross_entropy_soft(input, target, size_average=True):
         loss = cross_entropy(input, target)
         loss.backward()
     """
-    logsoftmax = nn.LogSoftmax()
+    #logsoftmax = nn.LogSoftmax()
     if size_average:
-        return torch.mean(torch.sum(-target * logsoftmax(input), dim=1))
+        return torch.mean(torch.sum(-target * torch.log(input), dim=1))
     else:
-        return torch.sum(torch.sum(-target * logsoftmax(input), dim=1))
+        return torch.sum(torch.sum(-target * torch.log(input), dim=1))
+
+    def KL_loss(x, y):
+        torch.log(x)
+        output = F.kl_div(torch.log(x), y, size_average = False)
+        return output/x.size(0)
 
