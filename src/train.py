@@ -52,31 +52,65 @@ def init_dataloader(opt, mode):
     return dataloader
 
 
-def init_list_dataloader(opt, mode, k):
-    """
-    [init_list_dataloader] will return a list of k-partitioned dataset. 
+# def init_list_dataloader(opt, mode, k):
+#     """
+#     [init_list_dataloader] will return a list of k-partitioned dataset. 
 
-    Args:
+#     Args:
+#         opt: parameters
+#         mode: mode for dataloader 
+#         k: the number of partitions 
+
+#     Return:
+#         list of torch.utils.data.DataLoader for each random subset of data
+#     """
+#     out = []
+#     dataset = init_dataset(opt, mode)
+#     len_dataset = len(dataset.y)
+#     len_partition = np.ceil(len_dataset / k)
+#     indices = list(range(len_dataset))
+
+#     for idx in range(k):
+#         labels_k = dataset.y[idx*len_partition:(idx+1)*len_partition+1]
+#         sampler_k = init_sampler(opt, labels_k, mode)
+#         dataloader_k = torch.utils.data.DataLoader(dataset, batch_sampler=sampler_k)
+#         out.append(dataloader_k)
+#     return out
+
+def init_partition_sampler(opt, labels, mode, k, idx):
+    if 'train' in mode:
+        classes_per_it = opt.classes_per_it_tr
+        num_samples = opt.num_support_tr + opt.num_query_tr
+    else:
+        classes_per_it = opt.classes_per_it_val
+        num_samples = opt.num_support_val + opt.num_query_val
+
+    return PartitianPrototypicalBatchSampler(labels=labels,
+                                            classes_per_it=classes_per_it,
+                                            num_samples=num_samples,
+                                            iterations=opt.iterations,
+                                            num_partitions=k,
+                                            idx=idx)
+
+
+def partitioned_dataloader(opt, mode, k):
+    """
+    Will return a list of dataloaders each has a partition of original dataset. 
+    The partitioning was done per class, ensuring that each dataloader will contain the full set of classes. 
+    
+    args
         opt: parameters
-        mode: mode for dataloader 
+        mode: just mode 
         k: the number of partitions 
-
-    Return:
-        list of torch.utils.data.DataLoader for each random subset of data
     """
-    out = []
+    dataloader_list = []
     dataset = init_dataset(opt, mode)
-    len_dataset = len(dataset.y)
-    len_partition = np.ceil(len_dataset / k)
-    indices = list(range(len_dataset))
+    for idx in range(1, k+1):
+        sampler_idx = init_partition_sampler(opt, dataset.y, mode, k, idx)
+        dataloader_idx = torch.utils.data.DataLoader(dataset, batch_sampler=sampler_idx)
+        dataloader_list.append(dataloader_idx)
 
-    for idx in range(k):
-        labels_k = dataset.y[idx*len_partition:(idx+1)*len_partition+1]
-        sampler_k = init_sampler(opt, labels_k, mode)
-        dataloader_k = torch.utils.data.DataLoader(dataset, batch_sampler=sampler_k)
-        out.append(dataloader_k)
-    return out
-
+    return dataloader_list
 
 def init_protonet(opt):
     '''
