@@ -170,9 +170,9 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
             x, y = batch
             x, y = x.to(device), y.to(device)
             model_output = model(x)
-            print('model_output',model_output)
-            print('x',x)
-            print('y',y)
+            # print('model_output',model_output)
+            # print('x',x)
+            # print('y',y)
             loss, acc = loss_fn(model_output, target=y,
                                 n_support=opt.num_support_val)
             val_loss.append(loss.item())
