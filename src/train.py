@@ -138,8 +138,8 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None):
             x, y = x.to(device), y.to(device)
             model_output = model(x)
             log_prob = get_log_prob(model_output, y, opt.num_support_tr)
-            print('log_prob', log_prob.shape)
-            print('log_prob', log_prob)
+            #print('log_prob', log_prob.shape)
+            #print('log_prob', log_prob)
             loss, acc = loss_fn(model_output, target=y,
                                 n_support=opt.num_support_tr)
             loss.backward()
