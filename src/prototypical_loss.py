@@ -122,7 +122,7 @@ def get_prob(input, target, n_support):
 
     query_samples = input.to('cpu')[query_idxs]
     dists = euclidean_dist(query_samples, prototypes)
-    print(dists.shape)
+    # print(dists.shape)
 
     # log_p_y = F.log_softmax(-dists, dim=1).view(n_classes, n_query, -1)
     #
