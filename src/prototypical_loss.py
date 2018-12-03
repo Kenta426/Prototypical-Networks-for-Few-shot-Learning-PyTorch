@@ -117,9 +117,6 @@ def get_log_prob(input, target, n_support):
     target_inds = torch.arange(0, n_classes)
     target_inds = target_inds.view(n_classes, 1, 1)
     target_inds = target_inds.expand(n_classes, n_query, 1).long()
-    print(target_cpu)
-    print(target_cpu.shape)
-    print(target_inds)
 
     loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1)
     return loss_val
