@@ -73,7 +73,7 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
 
     query_samples = input.to('cpu')[query_idxs]
     dists = euclidean_dist(query_samples, prototypes)
-    
+
 
     log_p_y = F.log_softmax(-dists, dim=1).view(n_classes, n_query, -1)
 
@@ -81,7 +81,7 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     target_inds = target_inds.view(n_classes, 1, 1)
     target_inds = target_inds.expand(n_classes, n_query, 1).long()
     target_inds1 = target_inds.contiguous().view(n_classes*n_query)
-    teacher_targets.view(n_classes*n_query,n_classes)
+
     #print(target_inds1)
     #loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1).mean()
     criterion = nn.CrossEntropyLoss()
@@ -89,6 +89,7 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     if teacher_targets == None:
         loss_val = criterion(-dists, target_inds1)
     else:
+        teacher_targets.view(n_classes*n_query,n_classes)
         loss_val = criterion(-dists, target_inds1) + cross_entropy_soft(-dists, teacher_targets.view(n_classes*n_query,n_classes))
 
     _, y_hat = log_p_y.max(2)
@@ -121,14 +122,15 @@ def get_prob(input, target, n_support):
 
     query_samples = input.to('cpu')[query_idxs]
     dists = euclidean_dist(query_samples, prototypes)
+    print(dists.shape)
 
-    log_p_y = F.log_softmax(-dists, dim=1).view(n_classes, n_query, -1)
-
-    target_inds = torch.arange(0, n_classes)
-    target_inds = target_inds.view(n_classes, 1, 1)
-    target_inds = target_inds.expand(n_classes, n_query, 1).long()
-
-    loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1)
+    # log_p_y = F.log_softmax(-dists, dim=1).view(n_classes, n_query, -1)
+    #
+    # target_inds = torch.arange(0, n_classes)
+    # target_inds = target_inds.view(n_classes, 1, 1)
+    # target_inds = target_inds.expand(n_classes, n_query, 1).long()
+    #
+    # loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1)
     p_y = F.softmax(-dists, dim=1).view(n_classes, n_query, -1)
     return p_y
 
@@ -154,4 +156,3 @@ def cross_entropy_soft(input, target, size_average=True):
         return torch.mean(torch.sum(-target * logsoftmax(input), dim=1))
     else:
         return torch.sum(torch.sum(-target * logsoftmax(input), dim=1))
-
