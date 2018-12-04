@@ -4,6 +4,7 @@ from prototypical_loss import prototypical_loss as loss_fn
 from omniglot_dataset import OmniglotDataset
 from protonet import ProtoNet
 from parser import get_parser
+import time
 
 from tqdm import tqdm
 import numpy as np
@@ -54,12 +55,12 @@ def init_dataloader(opt, mode):
 
 # def init_list_dataloader(opt, mode, k):
 #     """
-#     [init_list_dataloader] will return a list of k-partitioned dataset. 
+#     [init_list_dataloader] will return a list of k-partitioned dataset.
 
 #     Args:
 #         opt: parameters
-#         mode: mode for dataloader 
-#         k: the number of partitions 
+#         mode: mode for dataloader
+#         k: the number of partitions
 
 #     Return:
 #         list of torch.utils.data.DataLoader for each random subset of data
@@ -95,13 +96,13 @@ def init_partition_sampler(opt, labels, mode, k, idx):
 
 def partitioned_dataloader(opt, mode, k):
     """
-    Will return a list of dataloaders each has a partition of original dataset. 
-    The partitioning was done per class, ensuring that each dataloader will contain the full set of classes. 
-    
+    Will return a list of dataloaders each has a partition of original dataset.
+    The partitioning was done per class, ensuring that each dataloader will contain the full set of classes.
+
     args
         opt: parameters
-        mode: just mode 
-        k: the number of partitions 
+        mode: just mode
+        k: the number of partitions
     """
     dataloader_list = []
     dataset = init_dataset(opt, mode)
@@ -164,8 +165,11 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None):
 
     for epoch in range(opt.epochs):
         print('=== Epoch: {} ==='.format(epoch))
+
+
         tr_iter = iter(tr_dataloader)
         model.train()
+        start_epoch = time.time()
         for batch in tqdm(tr_iter):
             optim.zero_grad()
             x, y = batch
@@ -181,10 +185,14 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None):
         avg_acc = np.mean(train_acc[-opt.iterations:])
         print('Avg Train Loss: {}, Avg Train Acc: {}'.format(avg_loss, avg_acc))
         lr_scheduler.step()
+
+        print('Train-WallClock: {}'.format(time.time()-start_epoch))
         if val_dataloader is None:
             continue
         val_iter = iter(val_dataloader)
         model.eval()
+
+        start_val = time.time()
         for batch in val_iter:
             x, y = batch
             x, y = x.to(device), y.to(device)
@@ -199,6 +207,7 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None):
             best_acc)
         print('Avg Val Loss: {}, Avg Val Acc: {}{}'.format(
             avg_loss, avg_acc, postfix))
+        print('Val-WallClock: {}'.format(time.time()-start_val))
         if avg_acc >= best_acc:
             torch.save(model.state_dict(), best_model_path)
             best_acc = avg_acc
@@ -221,6 +230,7 @@ def test(opt, test_dataloader, model):
     avg_acc = list()
     for epoch in range(10):
         test_iter = iter(test_dataloader)
+        start_val = time.time()
         for batch in test_iter:
             x, y = batch
             x, y = x.to(device), y.to(device)
@@ -228,6 +238,7 @@ def test(opt, test_dataloader, model):
             _, acc = loss_fn(model_output, target=y,
                              n_support=opt.num_support_tr)
             avg_acc.append(acc.item())
+        print('Inference-WallClock: {}'.format(time.time()-start_val))
     avg_acc = np.mean(avg_acc)
     print('Test Acc: {}'.format(avg_acc))
 
