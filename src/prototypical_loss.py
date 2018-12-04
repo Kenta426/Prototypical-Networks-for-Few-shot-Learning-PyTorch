@@ -94,6 +94,9 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
         log_p_y_reshape = log_p_y.view(n_classes*n_query, -1)
         #loss_val = criterion(-dists, target_inds1) + cross_entropy_soft(-dists, teacher_targets_cpu.view(n_classes*n_query,n_classes))
         alpha = .9
+        print(log_p_y_reshape)
+        print(one_hot_target)
+        print(KL_loss(log_p_y_reshape, one_hot_target), KL_loss(log_p_y_reshape, teacher_targets_cpu))
         loss_val = alpha*KL_loss(log_p_y_reshape, one_hot_target) + (1-alpha)*KL_loss(log_p_y_reshape, teacher_targets_cpu)
     _, y_hat = log_p_y.max(2)
     acc_val = y_hat.eq(target_inds.squeeze()).float().mean()
@@ -153,7 +156,9 @@ def cross_entropy_soft(input, target, size_average=True):
         return torch.sum(torch.sum(-target * torch.log(input), dim=1))
 
 def KL_loss(x, y):
-    output = F.kl_div(torch.log(x), y, size_average = False)
+    output = F.kl_div(x, y, size_average = False)
+
+    print(x.size(0))
     return output/x.size(0)
 
 
