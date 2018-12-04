@@ -1,6 +1,6 @@
 # coding=utf-8
 from prototypical_batch_sampler import PrototypicalBatchSampler
-from prototypical_loss import prototypical_loss as loss_fn,get_log_prob
+from prototypical_loss import prototypical_loss as loss_fn
 from omniglot_dataset import OmniglotDataset
 from protonet import ProtoNet
 from parser import get_parser
@@ -171,9 +171,6 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None):
             x, y = batch
             x, y = x.to(device), y.to(device)
             model_output = model(x)
-            log_prob = get_log_prob(model_output, y, opt.num_support_tr)
-            #print('log_prob', log_prob.shape)
-            #print('log_prob', log_prob)
             loss, acc = loss_fn(model_output, target=y,
                                 n_support=opt.num_support_tr)
             loss.backward()
