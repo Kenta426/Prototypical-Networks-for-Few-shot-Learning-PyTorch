@@ -74,7 +74,7 @@ class PrototypicalBatchSampler(object):
 
 class PartitianPrototypicalBatchSampler(PrototypicalBatchSampler):
     """
-    Modify [PrototypicalBatchSampler] to enable partitioning. 
+    Modify [PrototypicalBatchSampler] to enable partitioning.
     """
 
     def __init__(self, labels, classes_per_it, num_samples, iterations, num_partitions, idx):
@@ -98,7 +98,7 @@ class PartitianPrototypicalBatchSampler(PrototypicalBatchSampler):
                 # FIXME when torch.argwhere will exists
                 x = int(np.ceil(len(self.classes[c_idxs])/self.num_partitions))
                 label_idx = torch.arange(len(self.classes)).long()[self.classes == c].item()
-                partitioned_indices = list(range(self.numel_per_class[label_idx]))[(self.idx-1)*x:self.idx*x]
+                partitioned_indices = np.array(range(self.numel_per_class[label_idx]))[(self.idx-1)*x:self.idx*x]
                 sample_idxs = partitioned_indices[torch.randperm(len(partitioned_indices))][:spc]
                 batch[s] = self.indexes[label_idx][sample_idxs]
             batch = batch[torch.randperm(len(batch))]
@@ -109,26 +109,3 @@ class PartitianPrototypicalBatchSampler(PrototypicalBatchSampler):
         returns the number of iterations (episodes) per epoch
         '''
         return self.iterations
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
