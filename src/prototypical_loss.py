@@ -83,7 +83,7 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     target_inds = target_inds.view(n_classes, 1, 1)
     target_inds = target_inds.expand(n_classes, n_query, 1).long()
     target_inds1 = target_inds.contiguous().view(n_classes*n_query)
-    #print(target_inds1)
+    #print(log_p_y)
     #loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1).mean()
     criterion = nn.CrossEntropyLoss()
     #Added soft labeling in CE and kd loss

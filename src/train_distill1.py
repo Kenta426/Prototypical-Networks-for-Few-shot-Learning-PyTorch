@@ -167,11 +167,14 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
 
     best_model_path = os.path.join(opt.experiment_root, 'best_'+model_name+'.pth')
     last_model_path = os.path.join(opt.experiment_root, 'last_'+model_name+'.pth')
-
+    j = 0
     for epoch in range(opt.epochs):
         print('=== Epoch: {} ==='.format(epoch))
         tr_iter = iter(tr_dataloader)
-        model.train()
+        model.train()            
+        # j += 1
+        # if j == 2:
+        #     break
         for batch in tqdm(tr_iter):
             optim.zero_grad()
             x, y = batch
@@ -182,8 +185,8 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
             else:
                 probs = []
                 for teacher in teachers:
-                    model_output = teacher(x)
-                    probs.append(get_prob(model_output).unsqueeze(0)) # 1 x class x query x batch
+                    model_output_teacher = teacher(x)
+                    probs.append(get_prob(model_output_teacher).unsqueeze(0)) # 1 x class x query x batch
                 probs = torch.cat(probs, dim=0) # teacher x class x query x batch
                 teacher_targets = torch.mean(probs, dim=0) # class x query x batch
 
@@ -309,6 +312,7 @@ def main():
                     )
         best_state, best_acc, train_loss, train_acc, val_loss, val_acc = res
         best_techers.append(model.load_state_dict(best_state)) # append best teacher
+        print('teacher'+str(i)+' saved')
     print('Finished training teachers')
 
 
