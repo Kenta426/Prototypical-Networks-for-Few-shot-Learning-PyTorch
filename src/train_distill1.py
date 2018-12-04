@@ -312,13 +312,8 @@ def main():
                     model_name='teacher'+str(i)
                     )
         best_state, best_acc, train_loss, train_acc, val_loss, val_acc = res
-<<<<<<< HEAD
-        best_techers.append(model.load_state_dict(best_state)) # append best teacher
-        print('teacher'+str(i)+' saved')
-=======
         model.load_state_dict(best_state)
         best_teachers.append(model) # append best teacher
->>>>>>> d30e0c65279aa5c649e440eb31816c81225dd1fb
     print('Finished training teachers')
 
 
