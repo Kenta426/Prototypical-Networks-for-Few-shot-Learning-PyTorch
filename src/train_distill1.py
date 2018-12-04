@@ -182,8 +182,8 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
             else:
                 probs = []
                 for teacher in teachers:
-                    model_output = teacher(x)
-                    probs.append(get_prob(model_output).unsqueeze(0)) # 1 x class x query x batch
+                    model_output_t = teacher(x)
+                    probs.append(get_prob(model_output_t).unsqueeze(0)) # 1 x class x query x batch
                 probs = torch.cat(probs, dim=0) # teacher x class x query x batch
                 teacher_targets = torch.mean(probs, dim=0) # class x query x batch
 
@@ -292,7 +292,7 @@ def main():
     val_dataloader = init_dataloader(options, 'val')
     # num_teacher = len(tr_dataloaders)
 
-    best_techers = []
+    best_teachers = []
 
     print('Start training teachers')
     for i, itr in enumerate(tr_dataloaders):
@@ -308,7 +308,8 @@ def main():
                     model_name='teacher'+str(i)
                     )
         best_state, best_acc, train_loss, train_acc, val_loss, val_acc = res
-        best_techers.append(model.load_state_dict(best_state)) # append best teacher
+        model.load_state_dict(best_state)
+        best_teachers.append(model) # append best teacher
     print('Finished training teachers')
 
 
@@ -325,7 +326,7 @@ def main():
                 model=model,
                 optim=optim,
                 lr_scheduler=lr_scheduler,
-                teachers=best_techers)
+                teachers=best_teachers)
     best_state, best_acc, train_loss, train_acc, val_loss, val_acc = res
     print('Testing with last model..')
     test(opt=options,
