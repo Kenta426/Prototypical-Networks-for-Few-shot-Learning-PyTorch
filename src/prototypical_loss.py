@@ -52,7 +52,7 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     '''
     target_cpu = target.to('cpu')
     input_cpu = input.to('cpu')
-    if teacher_targets != None:
+    if teacher_targets is not None:
         teacher_targets_cpu = teacher_targets.to('cpu')
 
     def supp_idxs(c):
@@ -66,7 +66,6 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     # FIXME when torch will support where as np
     # assuming n_query, n_target constants
     n_query = target_cpu.eq(classes[0].item()).sum().item() - n_support
-
     support_idxs = list(map(supp_idxs, classes))
 
     prototypes = torch.stack([input_cpu[idx_list].mean(0) for idx_list in support_idxs])
@@ -87,7 +86,7 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     #loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1).mean()
     criterion = nn.CrossEntropyLoss()
     #Added soft labeling in CE and kd loss
-    if teacher_targets == None:
+    if teacher_targets is None:
         loss_val = criterion(-dists, target_inds1)
     else:
         #loss_val = criterion(-dists, target_inds1) + cross_entropy_soft(-dists, teacher_targets_cpu.view(n_classes*n_query,n_classes))
@@ -158,9 +157,11 @@ def cross_entropy_soft(input, target, size_average=True):
     else:
         return torch.sum(torch.sum(-target * torch.log(input), dim=1))
 
-    def KL_loss(x, y):
-        torch.log(x)
-        output = F.kl_div(torch.log(x), y, size_average = False)
-        return output/x.size(0)
+def KL_loss(x, y):
+    torch.log(x)
+    print(x.shape)
+    print(y.shape)
+    output = F.kl_div(torch.log(x), y, size_average = False)
+    return output/x.size(0)
 
 
