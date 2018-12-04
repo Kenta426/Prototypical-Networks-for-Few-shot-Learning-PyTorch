@@ -185,10 +185,11 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
             else:
                 probs = []
                 for teacher in teachers:
-                    model_output_teacher = teacher(x)
-                    probs.append(get_prob(model_output_teacher).unsqueeze(0)) # 1 x class x query x batch
-                probs = torch.cat(probs, dim=0) # teacher x class x query x batch
-                teacher_targets = torch.mean(probs, dim=0) # class x query x batch
+
+                    model_output_t = teacher(x)
+                    probs.append(get_prob(model_output_t, y, opt.num_support_tr).unsqueeze(2)) # batch x class x 1
+                probs = torch.cat(probs, dim=2) # batch x class x teacher
+                teacher_targets = torch.mean(probs, dim=2) # batch x class
 
             loss, acc = loss_fn(model_output, target=y,
                                 n_support=opt.num_support_tr,
@@ -295,7 +296,7 @@ def main():
     val_dataloader = init_dataloader(options, 'val')
     # num_teacher = len(tr_dataloaders)
 
-    best_techers = []
+    best_teachers = []
 
     print('Start training teachers')
     for i, itr in enumerate(tr_dataloaders):
@@ -311,8 +312,13 @@ def main():
                     model_name='teacher'+str(i)
                     )
         best_state, best_acc, train_loss, train_acc, val_loss, val_acc = res
+<<<<<<< HEAD
         best_techers.append(model.load_state_dict(best_state)) # append best teacher
         print('teacher'+str(i)+' saved')
+=======
+        model.load_state_dict(best_state)
+        best_teachers.append(model) # append best teacher
+>>>>>>> d30e0c65279aa5c649e440eb31816c81225dd1fb
     print('Finished training teachers')
 
 
@@ -329,7 +335,7 @@ def main():
                 model=model,
                 optim=optim,
                 lr_scheduler=lr_scheduler,
-                teachers=best_techers)
+                teachers=best_teachers)
     best_state, best_acc, train_loss, train_acc, val_loss, val_acc = res
     print('Testing with last model..')
     test(opt=options,

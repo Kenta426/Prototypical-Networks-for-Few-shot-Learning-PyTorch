@@ -96,11 +96,15 @@ class PartitianPrototypicalBatchSampler(PrototypicalBatchSampler):
             for i, c in enumerate(self.classes[c_idxs]):
                 s = slice(i * spc, (i + 1) * spc)
                 # FIXME when torch.argwhere will exists
-                x = int(np.ceil(len(self.classes[c_idxs])/self.num_partitions))
                 label_idx = torch.arange(len(self.classes)).long()[self.classes == c].item()
+                x = int(np.ceil(self.numel_per_class[label_idx]/self.num_partitions))
                 partitioned_indices = np.array(range(self.numel_per_class[label_idx]))[(self.idx-1)*x:self.idx*x]
                 sample_idxs = partitioned_indices[torch.randperm(len(partitioned_indices))][:spc]
-                batch[s] = self.indexes[label_idx][sample_idxs]
+                try:
+                    batch[s] = self.indexes[label_idx][sample_idxs]
+                except:
+                    print(x)
+                    print(np.array(range(self.numel_per_class[label_idx])))
             batch = batch[torch.randperm(len(batch))]
             yield batch
 

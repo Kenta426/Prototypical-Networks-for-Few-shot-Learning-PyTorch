@@ -52,7 +52,7 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     '''
     target_cpu = target.to('cpu')
     input_cpu = input.to('cpu')
-    if teacher_targets != None:
+    if teacher_targets is not None:
         teacher_targets_cpu = teacher_targets.to('cpu')
 
     def supp_idxs(c):
@@ -66,7 +66,6 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     # FIXME when torch will support where as np
     # assuming n_query, n_target constants
     n_query = target_cpu.eq(classes[0].item()).sum().item() - n_support
-
     support_idxs = list(map(supp_idxs, classes))
 
     prototypes = torch.stack([input_cpu[idx_list].mean(0) for idx_list in support_idxs])
@@ -83,16 +82,19 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
     target_inds = target_inds.view(n_classes, 1, 1)
     target_inds = target_inds.expand(n_classes, n_query, 1).long()
     target_inds1 = target_inds.contiguous().view(n_classes*n_query)
-    #print(log_p_y)
+
     #loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1).mean()
     criterion = nn.CrossEntropyLoss()
     #Added soft labeling in CE and kd loss
-    if teacher_targets == None:
+    if teacher_targets is None:
         loss_val = criterion(-dists, target_inds1)
     else:
+        
+        one_hot_target = torch.eye(n_classes)[target_inds1]
+        log_p_y_reshape = log_p_y.view(n_classes*n_query, -1)
         #loss_val = criterion(-dists, target_inds1) + cross_entropy_soft(-dists, teacher_targets_cpu.view(n_classes*n_query,n_classes))
         alpha = .9
-        loss_val = alpha*KL_loss(log_p_y, target_inds1) + (1-alpha)*KL_loss(log_p_y, teacher_targets_cpu.view(n_classes*n_query,n_classes))
+        loss_val = alpha*KL_loss(log_p_y_reshape, one_hot_target) + (1-alpha)*KL_loss(log_p_y_reshape, teacher_targets_cpu)
     _, y_hat = log_p_y.max(2)
     acc_val = y_hat.eq(target_inds.squeeze()).float().mean()
 
@@ -123,16 +125,8 @@ def get_prob(input, target, n_support):
 
     query_samples = input.to('cpu')[query_idxs]
     dists = euclidean_dist(query_samples, prototypes)
-    # print(dists.shape)
-
-    # log_p_y = F.log_softmax(-dists, dim=1).view(n_classes, n_query, -1)
-    #
-    # target_inds = torch.arange(0, n_classes)
-    # target_inds = target_inds.view(n_classes, 1, 1)
-    # target_inds = target_inds.expand(n_classes, n_query, 1).long()
-    #
-    # loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1)
-    p_y = F.softmax(-dists, dim=1).view(n_classes, n_query, -1)
+    # dist: 300 x 60 
+    p_y = F.softmax(-dists, dim=1) # batch x class
     return p_y
 
 def cross_entropy_soft(input, target, size_average=True):
@@ -158,9 +152,8 @@ def cross_entropy_soft(input, target, size_average=True):
     else:
         return torch.sum(torch.sum(-target * torch.log(input), dim=1))
 
-    def KL_loss(x, y):
-        torch.log(x)
-        output = F.kl_div(torch.log(x), y, size_average = False)
-        return output/x.size(0)
+def KL_loss(x, y):
+    output = F.kl_div(torch.log(x), y, size_average = False)
+    return output/x.size(0)
 
 
