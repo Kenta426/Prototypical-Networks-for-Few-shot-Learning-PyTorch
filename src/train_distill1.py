@@ -1,5 +1,5 @@
 # coding=utf-8
-from prototypical_batch_sampler import PrototypicalBatchSampler
+from prototypical_batch_sampler import PrototypicalBatchSampler, PartitianPrototypicalBatchSampler
 from prototypical_loss import prototypical_loss as loss_fn
 from prototypical_loss import get_prob
 from omniglot_dataset import OmniglotDataset
