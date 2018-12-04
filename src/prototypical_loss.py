@@ -92,9 +92,9 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
         
         one_hot_target = torch.eye(n_classes)[target_inds1]
         log_p_y_reshape = log_p_y.view(n_classes*n_query, -1)
-        #loss_val = criterion(-dists, target_inds1) + cross_entropy_soft(-dists, teacher_targets_cpu.view(n_classes*n_query,n_classes))
+        loss_val = criterion(-dists, target_inds1) + cross_entropy_soft(-dists, teacher_targets_cpu.view(n_classes*n_query,n_classes))
         alpha = .9
-        loss_val = alpha*KL_loss(log_p_y_reshape, one_hot_target) + (1-alpha)*KL_loss(log_p_y_reshape, teacher_targets_cpu)
+        #loss_val = alpha*KL_loss(log_p_y_reshape, one_hot_target) + (1-alpha)*KL_loss(log_p_y_reshape, teacher_targets_cpu)
     _, y_hat = log_p_y.max(2)
     acc_val = y_hat.eq(target_inds.squeeze()).float().mean()
 
