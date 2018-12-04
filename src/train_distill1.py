@@ -183,7 +183,7 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
                 probs = []
                 for teacher in teachers:
                     model_output_t = teacher(x)
-                    probs.append(get_prob(model_output_t).unsqueeze(0)) # 1 x class x query x batch
+                    probs.append(get_prob(model_output_t, y, opt.num_support_tr).unsqueeze(0)) # 1 x class x query x batch
                 probs = torch.cat(probs, dim=0) # teacher x class x query x batch
                 teacher_targets = torch.mean(probs, dim=0) # class x query x batch
 
