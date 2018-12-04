@@ -79,6 +79,42 @@ def init_list_dataloader(opt, mode, k):
     return out
 
 
+def init_partition_sampler(opt, labels, mode, k, idx):
+    if 'train' in mode:
+        classes_per_it = opt.classes_per_it_tr
+        num_samples = opt.num_support_tr + opt.num_query_tr
+    else:
+        classes_per_it = opt.classes_per_it_val
+        num_samples = opt.num_support_val + opt.num_query_val
+
+    return PartitianPrototypicalBatchSampler(labels=labels,
+                                            classes_per_it=classes_per_it,
+                                            num_samples=num_samples,
+                                            iterations=opt.iterations,
+                                            num_partitions=k,
+                                            idx=idx)
+
+
+def partitioned_dataloader(opt, mode, k):
+    """
+    Will return a list of dataloaders each has a partition of original dataset.
+    The partitioning was done per class, ensuring that each dataloader will contain the full set of classes.
+
+    args
+        opt: parameters
+        mode: just mode
+        k: the number of partitions
+    """
+    dataloader_list = []
+    dataset = init_dataset(opt, mode)
+    for idx in range(1, k+1):
+        sampler_idx = init_partition_sampler(opt, dataset.y, mode, k, idx)
+        dataloader_idx = torch.utils.data.DataLoader(dataset, batch_sampler=sampler_idx)
+        dataloader_list.append(dataloader_idx)
+
+    return dataloader_list
+
+
 def init_protonet(opt):
     '''
     Initialize the ProtoNet
@@ -252,7 +288,7 @@ def main():
     init_seed(options)
 
     # first train many weak techers
-    tr_dataloaders = init_list_dataloader(options, 'train', 3)
+    tr_dataloaders = partitioned_dataloader(options, 'train', 3)
     val_dataloader = init_dataloader(options, 'val')
     # num_teacher = len(tr_dataloaders)
 
