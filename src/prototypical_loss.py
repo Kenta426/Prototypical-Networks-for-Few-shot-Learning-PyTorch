@@ -90,6 +90,10 @@ def prototypical_loss(input, target, n_support, teacher_targets=None):
         log_p_y_reshape = log_p_y.view(n_classes*n_query, -1)
         one_hot_target = torch.eye(n_classes)[target_inds1]
         loss_val = KL_loss(log_p_y_reshape, one_hot_target)
+<<<<<<< HEAD
+        #loss_val = criterion(-dists, target_inds1)
+=======
+>>>>>>> 24335280b2713ef14ac3f6d0a2f33a2ed1bad568
     else:
         
         one_hot_target = torch.eye(n_classes)[target_inds1]
