@@ -5,6 +5,7 @@ from prototypical_loss import get_prob
 from omniglot_dataset import OmniglotDataset
 from protonet import ProtoNet
 from parser import get_parser
+import time
 
 from tqdm import tqdm
 import numpy as np
@@ -168,10 +169,23 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
     best_model_path = os.path.join(opt.experiment_root, 'best_'+model_name+'.pth')
     last_model_path = os.path.join(opt.experiment_root, 'last_'+model_name+'.pth')
     j = 0
+
+    total_tr_time = 0
+    total_val_time = 0
+
     for epoch in range(opt.epochs):
         print('=== Epoch: {} ==='.format(epoch))
         tr_iter = iter(tr_dataloader)
+<<<<<<< HEAD
         model.train()            
+=======
+        model.train()
+        # j += 1
+        # if j == 2:
+        #     break
+
+        start_epoch = time.time()
+>>>>>>> 24335280b2713ef14ac3f6d0a2f33a2ed1bad568
         for batch in tqdm(tr_iter):
             optim.zero_grad()
             x, y = batch
@@ -199,17 +213,18 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
         avg_acc = np.mean(train_acc[-opt.iterations:])
         print('Avg Train Loss: {}, Avg Train Acc: {}'.format(avg_loss, avg_acc))
         lr_scheduler.step()
+        tr_time = time.time()-start_epoch
+        total_tr_time += tr_time
+        print('Train-WallClock: {}'.format(tr_time))
         if val_dataloader is None:
             continue
         val_iter = iter(val_dataloader)
         model.eval()
+        start_val = time.time()
         for batch in val_iter:
             x, y = batch
             x, y = x.to(device), y.to(device)
             model_output = model(x)
-            # print('model_output',model_output)
-            # print('x',x)
-            # print('y',y)
             loss, acc = loss_fn(model_output, target=y,
                                 n_support=opt.num_support_val)
             val_loss.append(loss.item())
@@ -220,10 +235,16 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
             best_acc)
         print('Avg Val Loss: {}, Avg Val Acc: {}{}'.format(
             avg_loss, avg_acc, postfix))
+        val_time = time.time()-start_val
+        total_val_time += val_time
+        print('Val-WallClock: {}'.format(total_val_time))
         if avg_acc >= best_acc:
             torch.save(model.state_dict(), best_model_path)
             best_acc = avg_acc
             best_state = model.state_dict()
+
+    print('Avg-Train-WallClock: {}'.format(total_tr_time/opt.epochs))
+    print('Avg-Val-WallClock: {}'.format(total_val_time/opt.epochs))
 
     torch.save(model.state_dict(), last_model_path)
 
@@ -240,8 +261,10 @@ def test(opt, test_dataloader, model):
     '''
     device = 'cuda:0' if torch.cuda.is_available() and opt.cuda else 'cpu'
     avg_acc = list()
+    test_total = 0
     for epoch in range(10):
         test_iter = iter(test_dataloader)
+        start_test = time.time()
         for batch in test_iter:
             x, y = batch
             x, y = x.to(device), y.to(device)
@@ -249,8 +272,13 @@ def test(opt, test_dataloader, model):
             _, acc = loss_fn(model_output, target=y,
                              n_support=opt.num_support_tr)
             avg_acc.append(acc.item())
+
+        test_time = time.time()-start_test
+        test_total += test_time
+        print('Inference-WallClock: {}'.format(test_time))
     avg_acc = np.mean(avg_acc)
     print('Test Acc: {}'.format(avg_acc))
+    print('Avg-Test-WallClock: {}'.format(test_total/10))
 
     return avg_acc
 
@@ -308,7 +336,10 @@ def main():
                     model_name='teacher'+str(i)
                     )
         best_state, best_acc, train_loss, train_acc, val_loss, val_acc = res
+<<<<<<< HEAD
 
+=======
+>>>>>>> 24335280b2713ef14ac3f6d0a2f33a2ed1bad568
         model.load_state_dict(best_state)
         best_teachers.append(model) # append best teacher
     print('Finished training teachers')
