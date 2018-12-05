@@ -176,16 +176,13 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
     for epoch in range(opt.epochs):
         print('=== Epoch: {} ==='.format(epoch))
         tr_iter = iter(tr_dataloader)
-<<<<<<< HEAD
-        model.train()            
-=======
+
         model.train()
         # j += 1
         # if j == 2:
         #     break
 
         start_epoch = time.time()
->>>>>>> 24335280b2713ef14ac3f6d0a2f33a2ed1bad568
         for batch in tqdm(tr_iter):
             optim.zero_grad()
             x, y = batch
@@ -336,10 +333,7 @@ def main():
                     model_name='teacher'+str(i)
                     )
         best_state, best_acc, train_loss, train_acc, val_loss, val_acc = res
-<<<<<<< HEAD
 
-=======
->>>>>>> 24335280b2713ef14ac3f6d0a2f33a2ed1bad568
         model.load_state_dict(best_state)
         best_teachers.append(model) # append best teacher
     print('Finished training teachers')
