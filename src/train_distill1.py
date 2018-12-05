@@ -313,7 +313,7 @@ def main():
     init_seed(options)
 
     # first train many weak techers
-    tr_dataloaders = partitioned_dataloader(options, 'train', 5)
+    tr_dataloaders = partitioned_dataloader(options, 'train', 4)
     val_dataloader = init_dataloader(options, 'val')
     # num_teacher = len(tr_dataloaders)
 
