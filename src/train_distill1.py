@@ -172,9 +172,6 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
         print('=== Epoch: {} ==='.format(epoch))
         tr_iter = iter(tr_dataloader)
         model.train()            
-        # j += 1
-        # if j == 2:
-        #     break
         for batch in tqdm(tr_iter):
             optim.zero_grad()
             x, y = batch
@@ -292,10 +289,9 @@ def main():
     init_seed(options)
 
     # first train many weak techers
-    tr_dataloaders = partitioned_dataloader(options, 'train', 3)
+    tr_dataloaders = partitioned_dataloader(options, 'train', 5)
     val_dataloader = init_dataloader(options, 'val')
     # num_teacher = len(tr_dataloaders)
-
     best_teachers = []
 
     print('Start training teachers')
@@ -312,13 +308,9 @@ def main():
                     model_name='teacher'+str(i)
                     )
         best_state, best_acc, train_loss, train_acc, val_loss, val_acc = res
-<<<<<<< HEAD
-        best_techers.append(model.load_state_dict(best_state)) # append best teacher
-        print('teacher'+str(i)+' saved')
-=======
+
         model.load_state_dict(best_state)
         best_teachers.append(model) # append best teacher
->>>>>>> d30e0c65279aa5c649e440eb31816c81225dd1fb
     print('Finished training teachers')
 
 
