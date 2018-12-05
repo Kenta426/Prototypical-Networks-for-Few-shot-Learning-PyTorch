@@ -1,10 +1,7 @@
 # coding=utf-8
 from prototypical_batch_sampler import PrototypicalBatchSampler
-<<<<<<< HEAD
-from prototypical_loss import prototypical_loss as loss_fn,get_prob
-=======
+
 from prototypical_loss import prototypical_loss as loss_fn
->>>>>>> 24335280b2713ef14ac3f6d0a2f33a2ed1bad568
 from omniglot_dataset import OmniglotDataset
 from protonet import ProtoNet
 from parser import get_parser
