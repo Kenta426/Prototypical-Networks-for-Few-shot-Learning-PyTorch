@@ -4,6 +4,12 @@ import argparse
 
 def get_parser():
     parser = argparse.ArgumentParser()
+
+    parser.add_argument('-K', '--teacher',
+                        type=int,
+                        help='number of bagged teachers',
+                        default=3)
+
     parser.add_argument('-root', '--dataset_root',
                         type=str,
                         help='path to dataset',
