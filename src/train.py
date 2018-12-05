@@ -218,8 +218,8 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None):
             torch.save(model.state_dict(), best_model_path)
             best_acc = avg_acc
             best_state = model.state_dict()
-    print('Avg-Train-WallClock: {}'.format(total_tr_time/opt.epoch))
-    print('Avg-Val-WallClock: {}'.format(total_val_time/opt.epoch))
+    print('Avg-Train-WallClock: {}'.format(total_tr_time/opt.epochs))
+    print('Avg-Val-WallClock: {}'.format(total_val_time/opt.epochs))
 
     torch.save(model.state_dict(), last_model_path)
 

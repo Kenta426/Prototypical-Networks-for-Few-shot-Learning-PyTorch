@@ -239,8 +239,8 @@ def train(opt, tr_dataloader, model, optim, lr_scheduler, val_dataloader=None, m
             best_acc = avg_acc
             best_state = model.state_dict()
 
-    print('Avg-Train-WallClock: {}'.format(total_tr_time/opt.epoch))
-    print('Avg-Val-WallClock: {}'.format(total_val_time/opt.epoch))
+    print('Avg-Train-WallClock: {}'.format(total_tr_time/opt.epochs))
+    print('Avg-Val-WallClock: {}'.format(total_val_time/opt.epochs))
 
     torch.save(model.state_dict(), last_model_path)
 
@@ -313,7 +313,7 @@ def main():
     init_seed(options)
 
     # first train many weak techers
-    tr_dataloaders = partitioned_dataloader(options, 'train', 3)
+    tr_dataloaders = partitioned_dataloader(options, 'train', 5)
     val_dataloader = init_dataloader(options, 'val')
     # num_teacher = len(tr_dataloaders)
 
